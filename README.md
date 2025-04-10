@@ -7,8 +7,9 @@ This is a simple peer-to-peer communication system developed in Java that allows
 - Client-Server architecture
 - Real-time messaging over LAN
 - Multithreaded server to handle multiple clients
-- Basic GUI using JavaFX (optional)
-- User login with username/password (optional)
+- User login with username/password
+- Support Chat history
+- Basic GUI using JavaFX 
 - Message display with sender highlighting
 
 ## 🧠 Technologies Used
@@ -27,7 +28,7 @@ This is a simple peer-to-peer communication system developed in Java that allows
 ### Client
 1. ## 🚀 How to Run
 
-Make sure you have Java (JDK 11 or above) and JavaFX installed and configured in your environment.
+Make sure you have Java (JDK 21 or above) and JavaFX installed and configured in your environment.
 
 ### Server
 1. Compile: `javac Server.java`
@@ -41,7 +42,6 @@ Make sure you have Java (JDK 11 or above) and JavaFX installed and configured in
 ## 📦 Future Improvements
 
 - File sharing support
-- Chat history
 - User authentication
 - Private messaging
 - UI improvements
