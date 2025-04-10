@@ -25,8 +25,17 @@ This is a simple peer-to-peer communication system developed in Java that allows
 2. Run: `java Server`
 
 ### Client
-1. Compile: `javac Client.java`
-2. Run: `java Client`
+1. ## 🚀 How to Run
+
+Make sure you have Java (JDK 11 or above) and JavaFX installed and configured in your environment.
+
+### Server
+1. Compile: `javac Server.java`
+2. Run: `java Server`
+
+### Client (JavaFX GUI)
+1. Compile: `javac --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls,javafx.fxml Client.java`
+2. Run: `java --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls,javafx.fxml Client`
 3. Enter the Server IP, Password (if used), and Username
 
 ## 📦 Future Improvements
