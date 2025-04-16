@@ -28,7 +28,7 @@ public class Client extends Application {
     private TextField inputField;
     private PrintWriter out;
     ComboBox<String> selector;
-    String SelectedUser;
+    String SelectedUser=null;
     private TextFlow chatFlow;
     ScrollPane scrollPane;
     String SystemUser;
@@ -223,7 +223,9 @@ public class Client extends Application {
                     while ((msg = in.readLine()) != null) {
                         String finalMsg = msg;
                         if(finalMsg.startsWith("<-@U") && finalMsg.endsWith("#->")){
-                            addToTheList(finalMsg);
+                            String val=finalMsg.replace("<-@U","");
+                            final String User=val.replace("#->","");
+                            addToTheList(User);
                             
                         }else{
                             String msgs[]=finalMsg.split(":->:");
@@ -261,12 +263,11 @@ public class Client extends Application {
         }
     }
 
-    public void addToTheList(String finalMsg){
-        String val=finalMsg.replace("<-@U","");
-        final String User=val.replace("#->","");
+    public void addToTheList(String User){
+        
         if (!selector.getItems().contains(User)) {
             selector.getItems().add(User);
-            if(selector.getValue() == null){
+            if(SelectedUser == null){
                 Platform.runLater(() -> selector.setValue(User));
                 SelectedUser=User;
             }
@@ -282,12 +283,8 @@ public class Client extends Application {
                 for(File File: Dir){
                     String FileDetails=decrypt(File.getName().split("\\.")[0]);
                     String User=FileDetails.split("-")[1];
-                    if (!selector.getItems().contains(User)) {
-                        selector.getItems().add(User);
-                        if(selector.getValue() == null){
-                            Platform.runLater(() -> selector.setValue(User));
-                            SelectedUser=User;
-                        }
+                    if(!User.equals(SystemUser)){
+                        addToTheList(User);
                     }
                 }
             }
@@ -340,14 +337,11 @@ public class Client extends Application {
             cipher.init(Cipher.ENCRYPT_MODE, key);
             byte[] encryptedBytes = cipher.doFinal(strToEncrypt.getBytes());
 
-            // Base64 encode
             String base64Encoded = Base64.getEncoder().encodeToString(encryptedBytes);
-
-            // Remove/replace illegal filename characters
             String safe = base64Encoded
-                    .replace("+", "-")  // + not allowed sometimes
-                    .replace("/", "_")  // / is illegal
-                    .replace("=", "");  // = is padding, safe to remove
+                    .replace("+", "-")  
+                    .replace("/", "_") 
+                    .replace("=", ""); 
 
             return safe;
         } catch (Exception e) {
@@ -356,10 +350,8 @@ public class Client extends Application {
         return null;
     }
 
-    // Decrypt from safe string
     public static String decrypt(String safeEncrypted) {
         try {
-            // Restore padding if necessary
             int paddingLength = (4 - safeEncrypted.length() % 4) % 4;
             String padded = safeEncrypted
                     .replace("-", "+")
