@@ -15,6 +15,11 @@ import javafx.stage.Stage;
 import java.io.*;
 import javafx.scene.text.*;
 import java.net.Socket;
+import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
 import javafx.util.Duration;
 
 
@@ -26,6 +31,7 @@ public class Client extends Application {
     String SelectedUser;
     private TextFlow chatFlow;
     ScrollPane scrollPane;
+    String SystemUser;
     String Me="rgb(230, 230, 230)",Other="rgb(223, 223, 223)";
     
 
@@ -36,7 +42,7 @@ public class Client extends Application {
     @Override
     public void start(Stage stage) {
         String[] inputs=UserName();
-        String UserName = inputs[2];
+        String UserName =SystemUser= inputs[2];
         selector = new ComboBox<>();
         selector.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(selector, Priority.ALWAYS);
@@ -130,8 +136,10 @@ public class Client extends Application {
         try{
             chatFlow.getChildren().clear();
             String Line;
-            BufferedReader read=new BufferedReader(new FileReader("Msg/" + SuperUser + "-" + To + ".txt"));
+            String FileName=encrypt(SuperUser + "-" + To);
+            BufferedReader read=new BufferedReader(new FileReader("Msg/" + FileName + ".txt"));
             while (( Line=read.readLine())!=null) {
+                Line=decrypt(Line);
                 boolean isMe = Line.startsWith("Me :");
                 String Owner = isMe ? "Me" : To + "";
                 Text senderText = new Text(Owner);
@@ -174,10 +182,11 @@ public class Client extends Application {
             if (!dir.exists()) {
                 dir.mkdirs();
             }
+            String FileName=encrypt(SuperUser + "-" + From);
 
-            FileWriter file = new FileWriter("Msg/" + SuperUser + "-" + From + ".txt", true);
-            String text = (me ? "Me : " : From + " : ") + Msg + "\n";
-            file.write(text);
+            FileWriter file = new FileWriter("Msg/" + FileName + ".txt", true);
+            String text = (me ? "Me : " : From + " : ") + Msg;;
+            file.write(encrypt(text)+"\n");
             file.close();
             Platform.runLater(() -> {
                 PauseTransition delay = new PauseTransition(Duration.millis(1000));
@@ -214,16 +223,8 @@ public class Client extends Application {
                     while ((msg = in.readLine()) != null) {
                         String finalMsg = msg;
                         if(finalMsg.startsWith("<-@U") && finalMsg.endsWith("#->")){
-                            String val=finalMsg.replace("<-@U","");
-                            final String User=val.replace("#->","");
-                            if (!selector.getItems().contains(User)) {
-                                selector.getItems().add(User);
-                                if(i==0){
-                                    Platform.runLater(() -> selector.setValue(User));
-                                    SelectedUser=User;
-                                    i++;
-                                }
-                            }
+                            addToTheList(finalMsg);
+                            
                         }else{
                             String msgs[]=finalMsg.split(":->:");
                             if(msgs[0].equals(SelectedUser)){
@@ -252,6 +253,7 @@ public class Client extends Application {
                     }
                 } catch (IOException ignored) {}
             }).start();
+            getSavedFile();
             return true;
         } catch (IOException e) {
             showAlert("Connection Error", "Unable to connect to server.");
@@ -259,6 +261,38 @@ public class Client extends Application {
         }
     }
 
+    public void addToTheList(String finalMsg){
+        String val=finalMsg.replace("<-@U","");
+        final String User=val.replace("#->","");
+        if (!selector.getItems().contains(User)) {
+            selector.getItems().add(User);
+            if(selector.getValue() == null){
+                Platform.runLater(() -> selector.setValue(User));
+                SelectedUser=User;
+            }
+        }
+    }
+
+    public void getSavedFile(){
+        File Thedir=new File("Msg");
+        // try{
+            if(Thedir.isDirectory()){
+                File[] Dir = Thedir.listFiles();
+                if (Dir == null) return;
+                for(File File: Dir){
+                    String FileDetails=decrypt(File.getName().split("\\.")[0]);
+                    String User=FileDetails.split("-")[1];
+                    if (!selector.getItems().contains(User)) {
+                        selector.getItems().add(User);
+                        if(selector.getValue() == null){
+                            Platform.runLater(() -> selector.setValue(User));
+                            SelectedUser=User;
+                        }
+                    }
+                }
+            }
+        // }catch(IOException e){}
+    }
     private void sendMessage(String UserName) {
         String msg = inputField.getText();
         if (!msg.isEmpty()) {
@@ -294,5 +328,51 @@ public class Client extends Application {
         alert.setTitle(title);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    private static final String secretKey = "1234567890123456";
+
+
+    public static String encrypt(String strToEncrypt) {
+        try {
+            SecretKeySpec key = new SecretKeySpec(secretKey.getBytes(), "AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            byte[] encryptedBytes = cipher.doFinal(strToEncrypt.getBytes());
+
+            // Base64 encode
+            String base64Encoded = Base64.getEncoder().encodeToString(encryptedBytes);
+
+            // Remove/replace illegal filename characters
+            String safe = base64Encoded
+                    .replace("+", "-")  // + not allowed sometimes
+                    .replace("/", "_")  // / is illegal
+                    .replace("=", "");  // = is padding, safe to remove
+
+            return safe;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Decrypt from safe string
+    public static String decrypt(String safeEncrypted) {
+        try {
+            // Restore padding if necessary
+            int paddingLength = (4 - safeEncrypted.length() % 4) % 4;
+            String padded = safeEncrypted
+                    .replace("-", "+")
+                    .replace("_", "/") + "====".substring(0, paddingLength);
+
+            SecretKeySpec key = new SecretKeySpec(secretKey.getBytes(), "AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(padded));
+            return new String(decryptedBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
