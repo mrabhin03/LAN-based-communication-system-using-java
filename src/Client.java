@@ -137,7 +137,7 @@ public class Client extends Application {
             chatFlow.getChildren().clear();
             String Line;
             String FileName=encrypt(SuperUser + "-" + To);
-            BufferedReader read=new BufferedReader(new FileReader("Msg/" + FileName + ".txt"));
+            BufferedReader read=new BufferedReader(new FileReader("AppCache/" + FileName + ".txt"));
             while (( Line=read.readLine())!=null) {
                 Line=decrypt(Line);
                 boolean isMe = Line.startsWith("Me :");
@@ -178,13 +178,13 @@ public class Client extends Application {
     }
     public void setChatDetails(String SuperUser,String From,String Msg,boolean me){
         try {
-            File dir = new File("Msg");
+            File dir = new File("AppCache");
             if (!dir.exists()) {
                 dir.mkdirs();
             }
             String FileName=encrypt(SuperUser + "-" + From);
 
-            FileWriter file = new FileWriter("Msg/" + FileName + ".txt", true);
+            FileWriter file = new FileWriter("AppCache/" + FileName + ".txt", true);
             String text = (me ? "Me : " : From + " : ") + Msg;;
             file.write(encrypt(text)+"\n");
             file.close();
@@ -218,7 +218,6 @@ public class Client extends Application {
             }
             new Thread(() -> {
                 try {
-                    int i=0;
                     String msg;
                     while ((msg = in.readLine()) != null) {
                         String finalMsg = msg;
@@ -275,7 +274,7 @@ public class Client extends Application {
     }
 
     public void getSavedFile(){
-        File Thedir=new File("Msg");
+        File Thedir=new File("AppCache");
         // try{
             if(Thedir.isDirectory()){
                 File[] Dir = Thedir.listFiles();
@@ -292,14 +291,13 @@ public class Client extends Application {
     }
     private void sendMessage(String UserName) {
         String msg = inputField.getText();
-        if (!msg.isEmpty()) {
-            out.println(UserName+"/<-@->/"+msg+"/<-@->/"+SelectedUser);
-            Text senderText = new Text("Me");
+        if(SelectedUser==null){
+            Text senderText = new Text("Error:");
             senderText.setFill(Color.DARKBLUE);
             senderText.setStyle("-fx-font-weight: bold;");
             senderText.setWrappingWidth(280); 
                                 
-            Text msgText = new Text(msg);
+            Text msgText = new Text("User Not Selected");
             msgText.setFill(Color.BLACK);
             msgText.setWrappingWidth(280);
                                 
@@ -314,7 +312,31 @@ public class Client extends Application {
             chatFlow.getChildren().add(wrapper);
 
             inputField.clear();
-            setChatDetails(UserName,SelectedUser,msg,true);
+        }else{
+            if (!msg.isEmpty()) {
+                out.println(UserName+"/<-@->/"+msg+"/<-@->/"+SelectedUser);
+                Text senderText = new Text("Me");
+                senderText.setFill(Color.DARKBLUE);
+                senderText.setStyle("-fx-font-weight: bold;");
+                senderText.setWrappingWidth(280); 
+                                    
+                Text msgText = new Text(msg);
+                msgText.setFill(Color.BLACK);
+                msgText.setWrappingWidth(280);
+                                    
+                VBox messageBox = new VBox(10, senderText, msgText);
+                messageBox.setStyle("-fx-background-color:"+Me+"; -fx-padding: 8; -fx-background-radius: 10;");
+                messageBox.setMaxWidth(300);
+
+                HBox wrapper = new HBox(messageBox);
+                wrapper.setAlignment( Pos.CENTER_RIGHT); 
+                wrapper.setPadding(new Insets(5));
+
+                chatFlow.getChildren().add(wrapper);
+
+                inputField.clear();
+                setChatDetails(UserName,SelectedUser,msg,true);
+            }
         }
         
 
