@@ -32,7 +32,9 @@ public class Client extends Application {
     private TextFlow chatFlow;
     ScrollPane scrollPane;
     String SystemUser;
-    String Me="rgb(230, 230, 230)",Other="rgb(223, 223, 223)";
+    String Me="rgb(230, 230, 230)",Other="rgb(190, 248, 180)";
+    private Socket socket;
+    private BufferedReader in;
     
 
     public static void main(String[] args) {
@@ -49,6 +51,7 @@ public class Client extends Application {
         if(!connectToServer(inputs)){
             return;
         }
+
 
         chatFlow = new TextFlow();
         chatFlow.setPadding(new Insets(10));
@@ -81,7 +84,20 @@ public class Client extends Application {
         stage.setScene(scene);
         stage.setTitle("Logged as - " + UserName);
         stage.show();
-        
+        stage.setOnCloseRequest(event -> {
+            try {
+                System.out.println("Closing Client...");
+                out.println("@Disconnect");
+                if (out != null) out.close();
+                if (in != null) in.close();
+                if (socket != null && !socket.isClosed()) socket.close();
+            } catch (IOException e) {
+                System.out.println("Closing Client Error...");
+            } finally {
+                Platform.exit();
+                System.exit(0);
+            }
+        });
 
         sendButton.setOnAction(e -> sendMessage(UserName));
         inputField.setOnAction(e -> sendMessage(UserName));
@@ -133,12 +149,15 @@ public class Client extends Application {
     }
 
     public void getChatDetails(String SuperUser,String To){
+        Platform.runLater(() -> {
         try{
+            
             chatFlow.getChildren().clear();
             String Line;
             String FileName=encrypt(SuperUser + "-" + To);
             BufferedReader read=new BufferedReader(new FileReader("AppCache/" + FileName + ".txt"));
             while (( Line=read.readLine())!=null) {
+                
                 Line=decrypt(Line);
                 boolean isMe = Line.startsWith("Me :");
                 String Owner = isMe ? "Me" : To + "";
@@ -160,7 +179,7 @@ public class Client extends Application {
                 wrapper.setPadding(new Insets(5));
 
                 chatFlow.getChildren().add(wrapper);
-
+                
 
             }
             read.close();
@@ -172,9 +191,11 @@ public class Client extends Application {
                 });
                 delay.play();
             });
+            
         }catch(IOException e){
 
         }
+    });
     }
     public void setChatDetails(String SuperUser,String From,String Msg,boolean me){
         try {
@@ -204,18 +225,20 @@ public class Client extends Application {
     }
 
     private boolean connectToServer(String[] Inputs) {
+        getSavedFile();
         try {
-            Socket socket = new Socket(Inputs[0], 5000);
+             socket = new Socket(Inputs[0], 5000);
             out = new PrintWriter(socket.getOutputStream(), true);
             out.println(Inputs[2]+"->"+Inputs[1]);
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             if(in.readLine().equals("19404")){
                 socket.close();
                 System.out.println("REJECTED");
                 showAlert("Connection Failed", "The Connection to the server has been rejected");
                 return false;
             }
+            
             new Thread(() -> {
                 try {
                     String msg;
@@ -254,7 +277,6 @@ public class Client extends Application {
                     }
                 } catch (IOException ignored) {}
             }).start();
-            getSavedFile();
             return true;
         } catch (IOException e) {
             showAlert("Connection Error", "Unable to connect to server.");
