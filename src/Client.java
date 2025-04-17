@@ -79,10 +79,13 @@ public class Client extends Application {
         root.setTop(topBox);
         root.setCenter(scrollPane);
         root.setBottom(inputBox);
+        root.setStyle("-fx-background-color:rgb(201, 228, 255);"); 
 
         Scene scene = new Scene(root, 400, 500);
         stage.setScene(scene);
         stage.setTitle("Logged as - " + UserName);
+
+        
         stage.show();
         stage.setOnCloseRequest(event -> {
             try {
