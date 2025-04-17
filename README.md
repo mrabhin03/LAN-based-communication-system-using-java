@@ -35,9 +35,15 @@ Make sure you have Java (JDK 21 or above) and JavaFX installed and configured in
 2. Run: `java Server`
 
 ### Client (JavaFX GUI)
-1. Compile: `javac --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls,javafx.fxml Client.java`
-2. Run: `java --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls,javafx.fxml Client`
+1. Compile: `javac --module-path JarAssets/javafx-sdk-21/lib --add-modules javafx.controls,javafx.fxml src/Client.java`
+2. Run: `java --module-path JarAssets/javafx-sdk-21/lib --add-modules javafx.controls,javafx.fxml -cp src Client`
 3. Enter the Server IP, Password (if used), and Username
+
+## Create Jar for Client  (JavaFX GUI)
+1. Complie: `javac --release 21 --module-path JarAssets\javafx-sdk-21\lib --add-modules javafx.controls,javafx.fxml -d bin src\Client.java`
+2. Create Jar: `jar cfm src/Client.jar src/manifest.txt -C bin .`
+3. Run Jar File: `JarAssets\jre\bin\java  --module-path JarAssets\javafx-sdk-21\lib  --add-modules javafx.controls,javafx.fxml  -jar src\Client.jar`
+4. Enter the Server IP, Password (if used), and Username
 
 ## 📦 Future Improvements
 
