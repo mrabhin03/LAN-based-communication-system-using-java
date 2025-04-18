@@ -8,6 +8,7 @@ This is a simple peer-to-peer communication system developed in Java that allows
 - Real-time messaging over LAN
 - Multithreaded server to handle multiple clients
 - User login with username/password
+- Message Encryption 
 - Support Chat history
 - Basic GUI using JavaFX 
 - Message display with sender highlighting
